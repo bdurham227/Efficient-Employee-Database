@@ -67,3 +67,62 @@ const runSearch = () => {
         }
       });
   };
+
+  const findDepartments = async () => {
+    console.log("----------");
+    await connection.query(
+      `SELECT
+           id, 
+           name AS Department 
+       FROM departments`,
+      (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        runSearch();
+      }
+    );
+  };
+  
+  const findRoles = async () => {
+    console.log("--------------");
+    await connection.query(
+      `SELECT 
+          id AS 'Employee ID',
+          title AS Position,
+          salary,
+          department_id AS 'Department ID'
+      FROM roles;`,
+      (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        runSearch();
+      }
+    );
+  };
+  
+  const findEmployees = async () => {
+    console.log("--------------------");
+    await connection.query(
+      `SELECT 
+          e.id,
+          CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name',
+          CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
+          r.salary,
+          r.title,
+          d.name AS 'Department',
+          e.manager_id 
+      FROM employees e
+      LEFT JOIN employees m
+      ON e.manager_id = m.role_id
+      JOIN roles r
+      ON e.role_id = r.id
+      JOIN departments d
+      ON r.department_id = d.id; `,
+  
+      (err, res) => {
+        if (err) throw err;
+        console.table(res);
+        runSearch();
+      }
+    );
+  };
