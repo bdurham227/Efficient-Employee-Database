@@ -1,0 +1,28 @@
+{
+  "name": "efficient-employee-database",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdurham227/Efficient-Employee-Database.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bdurham227/Efficient-Employee-Database/issues"
+  },
+  "homepage": "https://github.com/bdurham227/Efficient-Employee-Database#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "dotenv": "^8.2.0",
+    "inquirer": "^8.0.0",
+    "mysql": "^2.18.1",
+    "sequelize": "^6.6.2"
+  }
+}
