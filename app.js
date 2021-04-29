@@ -1,7 +1,9 @@
 const inquirer = require('inquirer');
-
 const cTable = require('console.table');
 const mysql = require('mysql');
+
+
+
 
 require('dotenv').config();
 
@@ -17,6 +19,14 @@ connection.connect((err) => {
     console.log(`connected as id ${connection.threadId}`);
     runSearch();
 })
+// const mgrQuery = connection.query(`
+// SELECT 
+//     CONCAT(e.first_name, ' ', e.last_name) AS 'Employee',
+//     CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
+//     e.manager_id 
+// FROM employees e
+// LEFT JOIN employees m
+// ON e.manager_id = m.role_id; `);
 
 const runSearch = () => {
     inquirer
@@ -30,7 +40,7 @@ const runSearch = () => {
             "Find all Roles",
             "Find all Employees",
             "Edit Department",
-            "Edit role",
+            "Add role",
             "Edit Employee",
             
             
@@ -53,15 +63,15 @@ const runSearch = () => {
             break;
   
           case "Edit Department":
-            editDepartment();
+            addDepartment();
             break;
   
-          case "Edit Role":
-            editRole();
+          case "Add Role":
+            addRoles();
             break;
   
           case "Edit Employee":
-            editEmployee();
+            addEmployee();
             break;
          
         }
@@ -99,7 +109,7 @@ const runSearch = () => {
       }
     );
   };
-  
+
   const findEmployees = async () => {
     console.log("--------------------");
     await connection.query(
@@ -121,8 +131,96 @@ const runSearch = () => {
   
       (err, res) => {
         if (err) throw err;
+        console.log(`${res.length} matches found!`);
         console.table(res);
         runSearch();
       }
     );
   };
+
+  const addDepartment = () => {
+      inquirer.prompt([
+          {
+              type: 'input',
+              name: 'departments',
+              message: 'Enter new Department name',
+          }
+      ])
+      .then((answer) => {
+          connection.query("INSERT INTO departments (name) VALUES ( ? )", [answer.departments]);
+          console.table(`${answer.departments} was added to Departments`);
+          runSearch();
+      })
+  }
+
+const addRoles = () => {
+    inquirer.prompt
+}
+
+
+
+
+
+
+
+
+const addEmployee = () => {
+
+    inquirer.prompt([
+        {
+            type:'input',
+            name:'firstName',
+            message: "Enter employee's first name",
+        },
+        {
+            type:'input',
+            name:'lastName',
+            message: "Enter employee's last name",
+        },
+    ])
+        .then((answer) => {
+            const employeeHolder = [answer.firstName, answer.lastName];
+            const roleQuery = `SELECT id, title FROM roles`;
+            connection.query(roleQuery, (err, res) => {
+                if (err) throw err;
+                const roleOptions = res.map(({ id, title }) => ({ role_id: id, name: title }));
+                inquirer.prompt([
+                         {
+                        type: 'list',
+                        name: 'roles',
+                        choices: roleOptions
+                        }
+                ])
+                .then((roleChoice) => {
+                    const role = roleChoice.roles.id;
+                    employeeHolder.push(role);
+                    const mgrQuery = `SELECT * FROM employees`;
+                    connection.query(mgrQuery, (err, res) => {
+                        if (err) throw err;
+                        const mgrOptions = res.map(({ id, first_name, last_name }) => ({ name: first_name + " " + last_name, value: id }));
+                        inquirer.prompt([
+                            {
+                                type: 'list',
+                                name: 'managerName',
+                                message: "Choose employee's manager",
+                                choices: mgrOptions
+                            }
+                        ])
+                        .then((mgrChoice) => {
+                            const manager = mgrChoice.managerName;
+                            employeeHolder.push(manager);
+
+                            const insertSql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`;
+                            connection.query(insertSql, employeeHolder, (err) => {
+                                if (err) throw err;
+                                console.log(`employee added!`)
+                            })
+
+                        })
+                    })
+                })
+            })   
+        })
+
+}
+
