@@ -1,11 +1,10 @@
+//require our npms
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require("mysql");
-const { prompt } = require("inquirer");
-// const connection = require('./config/connection');
 
 require("dotenv").config();
-
+//set up our connection to the database
 const connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -19,7 +18,7 @@ connection.connect((err) => {
   runSearch();
 });
 
-
+//bad boy that holds us all together
 const runSearch = () => {
   inquirer
     .prompt([
@@ -39,6 +38,7 @@ const runSearch = () => {
       },
     ])
     .then((answers) => {
+      //switch statement that directs user based off their initial prompt selection
       switch (answers.action) {
         case "Find all Departments":
           findDepartments();
@@ -70,66 +70,7 @@ const runSearch = () => {
     });
 };
 
-const findDepartments = async () => {
-  console.log("----------");
-  await connection.query(
-    `SELECT
-           id, 
-           name AS Department 
-       FROM departments`,
-    (err, res) => {
-      if (err) throw err;
-      console.table(res);
-      runSearch();
-    }
-  );
-};
-
-const findRoles = async () => {
-  console.log("--------------");
-  await connection.query(
-    `SELECT 
-          id AS 'Employee ID',
-          title AS Position,
-          salary,
-          department_id AS 'Department ID'
-      FROM roles;`,
-    (err, res) => {
-      if (err) throw err;
-      console.table(res);
-      runSearch();
-    }
-  );
-};
-
-const findEmployees = async () => {
-  console.log("--------------------");
-  await connection.query(
-    `SELECT 
-          e.id,
-          CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name',
-          CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
-          r.salary,
-          r.title,
-          d.name AS 'Department',
-          e.manager_id 
-      FROM employees e
-      LEFT JOIN employees m
-      ON e.manager_id = m.role_id
-      JOIN roles r
-      ON e.role_id = r.id
-      JOIN departments d
-      ON r.department_id = d.id; `,
-
-    (err, res) => {
-      if (err) throw err;
-      console.log(`${res.length} matches found!`);
-      console.table(res);
-      runSearch();
-    }
-  );
-};
-
+//add new department
 const addDepartment = () => {
   inquirer
     .prompt([
@@ -147,7 +88,7 @@ const addDepartment = () => {
       runSearch();
     });
 };
-
+//add new role
 const addRole = () => {
   const deptQuery = `SELECT * From departments`;
   connection.query(deptQuery, (err, res) => {
@@ -165,12 +106,8 @@ const addRole = () => {
         },
       ])
       .then((answer) => {
-      
         const deptName = answer.deptName;
         const deptId = deptOptions.find((el) => el.name === answer.deptName).id;
-       
-        
-
         //get role information
         inquirer
           .prompt([
@@ -208,7 +145,9 @@ const addRole = () => {
 };
 
 
+//add new employee
 const addEmployee = () => {
+  //get user inputs
   inquirer
     .prompt([
       {
@@ -278,22 +217,6 @@ const addEmployee = () => {
  
 
 
-const getAllRoles = () => {
-  return new Promise ((resolve, reject) => {
-    connection.query(`SELECT * FROM roles;`, (err, res) => {
-      if (err) reject (err);
-      resolve(res);
-    })
-  })
-}
-const getAllEmployees = () => {
-  return new Promise((resolve, reject) => {
-    connection.query(`SELECT * FROM employees;`, (err, res) => {
-      if (err) reject (err);
-      resolve(res);
-    })
-  })
-}
 
 
 
@@ -339,9 +262,91 @@ const updateEmployee = async () => {
 }
 
 
+//functions to query database
 
+//query on departments table
+const findDepartments = async () => {
+  console.log("----------");
+  await connection.query(
+    `SELECT
+           id, 
+           name AS Department 
+       FROM departments`,
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      runSearch();
+    }
+  );
+};
+//query on roles table
+const findRoles = async () => {
+  console.log("--------------");
+  await connection.query(
+    `SELECT 
+          id AS 'Employee ID',
+          title AS Position,
+          salary,
+          department_id AS 'Department ID'
+      FROM roles;`,
+    (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      runSearch();
+    }
+  );
+};
 
+//query database for employees, concat first and last name and set alliases for employee name and manager name
+//this query runs a self outer join on the employee table and then a join on roles table and departments table
+const findEmployees = async () => {
+  console.log("--------------------");
+  await connection.query(
+    `SELECT 
+          e.id,
+          CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name',
+          CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
+          r.salary,
+          r.title,
+          d.name AS 'Department',
+          e.manager_id 
+      FROM employees e
+      LEFT JOIN employees m
+      ON e.manager_id = m.role_id
+      JOIN roles r
+      ON e.role_id = r.id
+      JOIN departments d
+      ON r.department_id = d.id; `,
 
+    (err, res) => {
+      if (err) throw err;
+      console.log(`${res.length} matches found!`);
+      console.table(res);
+      runSearch();
+    }
+  );
+};
+
+//functions that query database to be used in update functions
+
+//query roles table to get all data store in a new promise
+const getAllRoles = () => {
+  return new Promise ((resolve, reject) => {
+    connection.query(`SELECT * FROM roles;`, (err, res) => {
+      if (err) reject (err);
+      resolve(res);
+    })
+  })
+}
+//query employees table to get all data and store in a new promise
+const getAllEmployees = () => {
+  return new Promise((resolve, reject) => {
+    connection.query(`SELECT * FROM employees;`, (err, res) => {
+      if (err) reject (err);
+      resolve(res);
+    })
+  })
+}
  
 
 
