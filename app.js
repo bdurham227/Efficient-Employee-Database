@@ -2,6 +2,7 @@ const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require("mysql");
 const { prompt } = require("inquirer");
+// const connection = require('./config/connection');
 
 require("dotenv").config();
 
@@ -17,14 +18,7 @@ connection.connect((err) => {
   console.log(`connected as id ${connection.threadId}`);
   runSearch();
 });
-// const mgrQuery = connection.query(`
-// SELECT
-//     CONCAT(e.first_name, ' ', e.last_name) AS 'Employee',
-//     CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
-//     e.manager_id
-// FROM employees e
-// LEFT JOIN employees m
-// ON e.manager_id = m.role_id; `);
+
 
 const runSearch = () => {
   inquirer
@@ -39,7 +33,8 @@ const runSearch = () => {
           "Find all Employees",
           "Edit Department",
           "Add role",
-          "Edit Employee",
+          "Add Employee",
+          "Update Employee"
         ],
       },
     ])
@@ -65,9 +60,12 @@ const runSearch = () => {
           addRole();
           break;
 
-        case "Edit Employee":
+        case "Add Employee":
           addEmployee();
           break;
+        case "Update Employee":
+            updateEmployee();
+            break;
       }
     });
 };
@@ -167,11 +165,10 @@ const addRole = () => {
         },
       ])
       .then((answer) => {
-        // const newRole = [];
+      
         const deptName = answer.deptName;
-        // newRole.push(deptName);
         const deptId = deptOptions.find((el) => el.name === answer.deptName).id;
-        // newRole.push(deptId);
+       
         
 
         //get role information
@@ -199,54 +196,17 @@ const addRole = () => {
             const roleSalary = answer.salary;
             const newRole = [roleData, roleSalary, deptId];
 
-            // const sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);`;
-            // connection.query(sql, newRole, (err) => {
-            //   if (err) throw err;
-            //   console.log(`new role was added!`);
-            // });
+            const sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);`;
+            connection.query(sql, newRole, (err) => {
+              if (err) throw err;
+              console.log(`new role was added!`);
+            });
           });
       });
   });
+  runSearch();
 };
 
-// {
-//     type: 'input',
-//     name: 'title',
-//     message: "Enter a title for the new role",
-// },
-// {
-//     type: 'input',
-//     name: 'salary',
-//     message: 'Enter a salary for the new role',
-//     validate(value) {
-//         if(isNaN(value) === false) {
-//             return true;
-//         }
-//         return false;
-//     }
-// },
-
-//inset into query
-// const sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);`
-// connection.query(sql, newRole, (err) => {
-//     if (err) throw err;
-//     console.log(`new role was added!`);
-// })
-
-// .then((answer) => {
-//     const dept_id = departments.find(el => el.name === answer.roleDept).id;
-//     const query = `INSERT INTO roles (title, salary, department_id) VALUES (?)`;
-//     connection.query(query, [answer.title, answer.salary, dept_id], (err ) => {
-//         if (err) throw err;
-//         console.log('new role was added to database');
-//     })
-// })
-// const query = `SELECT * FROM roles`;
-//     connection.query(query, (err, res) => {
-//         if (err) throw err;
-//         const roles = res.map(({ id, title, salary, department_id }) => ({ id, title, salary, department_id }));
-//         console.log(roles);
-//     })
 
 const addEmployee = () => {
   inquirer
@@ -312,4 +272,76 @@ const addEmployee = () => {
           });
       });
     });
+    runSearch();
 };
+
+ 
+
+
+const getAllRoles = () => {
+  return new Promise ((resolve, reject) => {
+    connection.query(`SELECT * FROM roles;`, (err, res) => {
+      if (err) reject (err);
+      resolve(res);
+    })
+  })
+}
+const getAllEmployees = () => {
+  return new Promise((resolve, reject) => {
+    connection.query(`SELECT * FROM employees;`, (err, res) => {
+      if (err) reject (err);
+      resolve(res);
+    })
+  })
+}
+
+
+
+const updateEmployee = async () => {
+  try {
+    const rolesQuery = await getAllRoles();
+    const roles = rolesQuery.map(({ title: name, id: value}) => ({ name, value}));
+    // console.log(roles)
+    
+    const empQuery = await getAllEmployees();
+    const emps = empQuery.map(({ first_name: name, id: value }) => ({ name, value}));
+    // console.log(emps);
+    
+
+    inquirer.prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'Choose the employee and their role you would like to change',
+        choices: emps
+      },
+      {
+        type: 'list',
+        name: 'roles',
+        message: 'Which role?',
+        choices: roles
+    }
+  ])
+  .then((answer) => {
+    const updated = [answer.employee, answer.roles];
+    console.log(updated);
+    const updateQuery = `UPDATE employees SET role_id = ? WHERE role_id = ?;`;
+    connection.query(updateQuery, updated, (err, res) => {
+      if (err) throw (err);
+      console.log(`${updated} was updated!`)
+    })
+  })
+  
+  } catch (err) {
+    if (err) throw (err);
+    console.log('oops something wrong!')
+  }
+}
+
+
+
+
+
+ 
+
+
