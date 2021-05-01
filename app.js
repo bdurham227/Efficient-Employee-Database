@@ -21,22 +21,20 @@ connection.connect((err) => {
 //bad boy that holds us all together
 const runSearch = () => {
   inquirer
-    .prompt([
-      {
-        name: "action",
-        type: "list",
-        message: "What would you like to do?",
-        choices: [
-          "Find all Departments",
-          "Find all Roles",
-          "Find all Employees",
-          "Edit Department",
-          "Add role",
-          "Add Employee",
-          "Update Employee"
-        ],
-      },
-    ])
+    .prompt([{
+      name: "action",
+      type: "list",
+      message: "What would you like to do?",
+      choices: [
+        "Find all Departments",
+        "Find all Roles",
+        "Find all Employees",
+        "Edit Department",
+        "Add role",
+        "Add Employee",
+        "Update Employee"
+      ],
+    }, ])
     .then((answers) => {
       //switch statement that directs user based off their initial prompt selection
       switch (answers.action) {
@@ -64,8 +62,8 @@ const runSearch = () => {
           addEmployee();
           break;
         case "Update Employee":
-            updateEmployee();
-            break;
+          updateEmployee();
+          break;
       }
     });
 };
@@ -73,13 +71,11 @@ const runSearch = () => {
 //add new department
 const addDepartment = () => {
   inquirer
-    .prompt([
-      {
-        type: "input",
-        name: "departments",
-        message: "Enter new Department name",
-      },
-    ])
+    .prompt([{
+      type: "input",
+      name: "departments",
+      message: "Enter new Department name",
+    }, ])
     .then((answer) => {
       connection.query("INSERT INTO departments (name) VALUES ( ? )", [
         answer.departments,
@@ -93,25 +89,28 @@ const addRole = () => {
   const deptQuery = `SELECT * From departments`;
   connection.query(deptQuery, (err, res) => {
     if (err) throw err;
-    const deptOptions = res.map(({ name, id }) => ({ name, id }));
+    const deptOptions = res.map(({
+      name,
+      id
+    }) => ({
+      name,
+      id
+    }));
     console.log(deptOptions);
 
     inquirer
-      .prompt([
-        {
-          type: "list",
-          name: "deptName",
-          message: "Choose the role's department",
-          choices: deptOptions,
-        },
-      ])
+      .prompt([{
+        type: "list",
+        name: "deptName",
+        message: "Choose the role's department",
+        choices: deptOptions,
+      }, ])
       .then((answer) => {
         const deptName = answer.deptName;
         const deptId = deptOptions.find((el) => el.name === answer.deptName).id;
         //get role information
         inquirer
-          .prompt([
-            {
+          .prompt([{
               type: "input",
               name: "title",
               message: "Enter a title for the new role",
@@ -149,8 +148,7 @@ const addRole = () => {
 const addEmployee = () => {
   //get user inputs
   inquirer
-    .prompt([
-      {
+    .prompt([{
         type: "input",
         name: "firstName",
         message: "Enter employee's first name",
@@ -166,37 +164,40 @@ const addEmployee = () => {
       const roleQuery = `SELECT id, title FROM roles`;
       connection.query(roleQuery, (err, res) => {
         if (err) throw err;
-        const roleOptions = res.map(({ id, title }) => ({
-          role_id: id,
+        const roleOptions = res.map(({
+          id,
+          title
+        }) => ({
+         value: id,
           name: title,
         }));
         inquirer
-          .prompt([
-            {
-              type: "list",
-              name: "roles",
-              choices: roleOptions,
-            },
-          ])
+          .prompt([{
+            type: "list",
+            name: "roles",
+            choices: roleOptions,
+          }, ])
           .then((roleChoice) => {
-            const role = roleChoice.roles.id;
+            const role = roleChoice.roles;
             employeeHolder.push(role);
             const mgrQuery = `SELECT * FROM employees`;
             connection.query(mgrQuery, (err, res) => {
               if (err) throw err;
-              const mgrOptions = res.map(({ id, first_name, last_name }) => ({
+              const mgrOptions = res.map(({
+                id,
+                first_name,
+                last_name
+              }) => ({
                 name: first_name + " " + last_name,
                 value: id,
               }));
               inquirer
-                .prompt([
-                  {
-                    type: "list",
-                    name: "managerName",
-                    message: "Choose employee's manager",
-                    choices: mgrOptions,
-                  },
-                ])
+                .prompt([{
+                  type: "list",
+                  name: "managerName",
+                  message: "Choose employee's manager",
+                  choices: mgrOptions,
+                }, ])
                 .then((mgrChoice) => {
                   const manager = mgrChoice.managerName;
                   employeeHolder.push(manager);
@@ -205,17 +206,15 @@ const addEmployee = () => {
                   connection.query(insertSql, employeeHolder, (err) => {
                     if (err) throw err;
                     console.log(`employee added!`);
+                    runSearch();
                   });
                 });
             });
           });
       });
     });
-    runSearch();
+
 };
-
- 
-
 
 
 
@@ -223,42 +222,56 @@ const addEmployee = () => {
 const updateEmployee = async () => {
   try {
     const rolesQuery = await getAllRoles();
-    const roles = rolesQuery.map(({ title: name, id: value}) => ({ name, value}));
+    const roles = rolesQuery.map(({
+      title: name,
+      id: value
+    }) => ({
+      name,
+      value
+    }));
     // console.log(roles)
-    
-    const empQuery = await getAllEmployees();
-    const emps = empQuery.map(({ first_name: name, id: value }) => ({ name, value}));
-    // console.log(emps);
-    
 
-    inquirer.prompt([
-      {
-        type: 'list',
-        name: 'employee',
-        message: 'Choose the employee and their role you would like to change',
-        choices: emps
-      },
-      {
-        type: 'list',
-        name: 'roles',
-        message: 'Which role?',
-        choices: roles
-    }
-  ])
-  .then((answer) => {
-    const updated = [answer.employee, answer.roles];
-    console.log(updated);
-    const updateQuery = `UPDATE employees SET role_id = ? WHERE role_id = ?;`;
-    connection.query(updateQuery, updated, (err, res) => {
-      if (err) throw (err);
-      console.log(`${updated} was updated!`)
-    })
-  })
-  
+    const empQuery = await getAllEmployees();
+    const emps = empQuery.map(({
+      first_name: name,
+      id: value
+    }) => ({
+      name,
+      value
+    }));
+    // console.log(emps);
+
+
+    inquirer.prompt([{
+          type: 'list',
+          name: 'employee',
+          message: 'Choose the employee and their role you would like to change',
+          choices: emps
+        },
+        {
+          type: 'list',
+          name: 'roles',
+          message: 'Which role?',
+          choices: roles
+        }
+      ])
+      .then((answer) => {
+        const updated = [answer.roles, answer.employee];
+        console.log(updated);
+        const updateQuery = `UPDATE employees SET role_id = ? WHERE id = ?`;
+        return connection.query(updateQuery, updated, (err, res) => {
+          console.log(res);
+          if (err) throw (err);
+          console.log(`${updated} was updated!`)
+          runSearch();
+        })
+      })
+
   } catch (err) {
     if (err) throw (err);
     console.log('oops something wrong!')
   }
+
 }
 
 
@@ -302,21 +315,19 @@ const findRoles = async () => {
 const findEmployees = async () => {
   console.log("--------------------");
   await connection.query(
-    `SELECT 
-          e.id,
-          CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name',
-          CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
-          r.salary,
-          r.title,
-          d.name AS 'Department',
-          e.manager_id 
-      FROM employees e
-      LEFT JOIN employees m
-      ON e.manager_id = m.role_id
-      JOIN roles r
-      ON e.role_id = r.id
-      JOIN departments d
-      ON r.department_id = d.id; `,
+    `          SELECT e.id,
+    CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name',
+    CONCAT(m.first_name, ' ', m.last_name) AS 'Manager',
+    r.salary,
+    r.title,
+    d.name AS 'Department'
+FROM employees e
+LEFT JOIN employees m
+ON e.manager_id = m.id
+LEFT JOIN roles r
+ON e.role_id = r.id
+LEFT JOIN departments d
+ON r.department_id = d.id; ; `,
 
     (err, res) => {
       if (err) throw err;
@@ -331,9 +342,9 @@ const findEmployees = async () => {
 
 //query roles table to get all data store in a new promise
 const getAllRoles = () => {
-  return new Promise ((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     connection.query(`SELECT * FROM roles;`, (err, res) => {
-      if (err) reject (err);
+      if (err) reject(err);
       resolve(res);
     })
   })
@@ -342,11 +353,8 @@ const getAllRoles = () => {
 const getAllEmployees = () => {
   return new Promise((resolve, reject) => {
     connection.query(`SELECT * FROM employees;`, (err, res) => {
-      if (err) reject (err);
+      if (err) reject(err);
       resolve(res);
     })
   })
 }
- 
-
-
