@@ -133,14 +133,16 @@ const addRole = () => {
             const newRole = [roleData, roleSalary, deptId];
 
             const sql = `INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);`;
-            connection.query(sql, newRole, (err) => {
+            connection.query(sql, newRole, (err, res) => {
               if (err) throw err;
               console.log(`new role was added!`);
+              console.table(res);
+              runSearch();
             });
           });
       });
   });
-  runSearch();
+ 
 };
 
 
@@ -260,9 +262,11 @@ const updateEmployee = async () => {
         console.log(updated);
         const updateQuery = `UPDATE employees SET role_id = ? WHERE id = ?`;
         return connection.query(updateQuery, updated, (err, res) => {
-          console.log(res);
+          
           if (err) throw (err);
-          console.log(`${updated} was updated!`)
+         
+          console.log(`${res.affectedRows} was updated!`)
+        
           runSearch();
         })
       })
