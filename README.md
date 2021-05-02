@@ -51,8 +51,7 @@ The Efficient Employee Database is a Content Management Systems that efficiently
 
 
       node app.js
-      OR
-      nodemon app.js
+     
 
  
 
@@ -60,27 +59,31 @@ The Efficient Employee Database is a Content Management Systems that efficiently
 
 
    
-
-
-
-
-
-Screenshot of Landing Page:
---
-![Screenshot](img/notetakerfullscreen.png)
-
-Screenshot of Notes Page:
---
-![Screenshot](img/notetakernoteshtml.png)
-
 GIF Demo:
 --
-![Demo](img/NoteTaker.gif)
+![Demo](assets/employeedb.gif)
+
+
+
+
+Screenshot of Application:
+--
+![Screenshot](assets/screenshotone.png)
+
+Screenshot of Application:
+--
+![Screenshot](assets/screenshotwo.png)
+
+Click To Watch Walkthrough video: 
+
+
+
+[![IMAGE ALT TEXT](assets/screenshotthree.png)](https://drive.google.com/file/d/1QuQ26IfvVKIByYjhl-lFFUtrgJBrMD86/preview "Video title")
 
 
 
 Visit the Repo: 
-[Github]**<https://github.com/bdurham227/Express-Note-Taker-App>**
+[Github]**<https://github.com/bdurham227/Efficient-Employee-Database>**
 
    
 
